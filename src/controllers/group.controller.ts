@@ -391,8 +391,14 @@ export const deleteGroup = async (req: AuthRequest, res: Response) => {
 export const getGroupMembers = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const search = req.query.search as string;
 
-    const { data, error } = await supabase
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    let query = supabase
       .from("grupo_miembros")
       .select(
         `
@@ -401,8 +407,19 @@ export const getGroupMembers = async (req: AuthRequest, res: Response) => {
         fecha_unido,
         usuarios!inner (email, nombre_completo)
       `,
+        { count: "exact" },
       )
       .eq("grupo_id", id);
+
+    if (search) {
+      query = query.or(
+        `usuarios.nombre_completo.ilike.%${search}%,usuarios.email.ilike.%${search}%`,
+      );
+    }
+
+    const { data, error, count } = await query
+      .order("fecha_unido", { ascending: false })
+      .range(from, to);
 
     if (error || !data) {
       return res.status(500).json({
@@ -423,7 +440,7 @@ export const getGroupMembers = async (req: AuthRequest, res: Response) => {
     return res.status(200).json({
       statusCode: 200,
       intOpCode: 0,
-      data: miembros,
+      data: [{ members: miembros, totalRecords: count || 0 }],
     } as ApiResponse);
   } catch (err) {
     return res.status(500).json({

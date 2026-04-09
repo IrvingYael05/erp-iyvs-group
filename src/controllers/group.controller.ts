@@ -413,7 +413,8 @@ export const getGroupMembers = async (req: AuthRequest, res: Response) => {
 
     if (search) {
       query = query.or(
-        `usuarios.nombre_completo.ilike.%${search}%,usuarios.email.ilike.%${search}%`,
+        `nombre_completo.ilike.%${search}%,email.ilike.%${search}%`,
+        { foreignTable: "usuarios" },
       );
     }
 
@@ -425,7 +426,11 @@ export const getGroupMembers = async (req: AuthRequest, res: Response) => {
       return res.status(500).json({
         statusCode: 500,
         intOpCode: 1,
-        data: [{ message: "Error al obtener los integrantes del grupo." + error.message }],
+        data: [
+          {
+            message: "Error al obtener los integrantes del grupo.",
+          },
+        ],
       } as ApiResponse);
     }
 

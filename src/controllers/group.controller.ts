@@ -425,7 +425,7 @@ export const getGroupMembers = async (req: AuthRequest, res: Response) => {
       return res.status(500).json({
         statusCode: 500,
         intOpCode: 1,
-        data: [{ message: "Error al obtener los integrantes del grupo." }],
+        data: [{ message: "Error al obtener los integrantes del grupo." + error.message }],
       } as ApiResponse);
     }
 

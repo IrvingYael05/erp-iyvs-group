@@ -165,18 +165,28 @@ export const getAllGroups = async (req: AuthRequest, res: Response) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
+    const search = req.query.search as string;
+
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
-    const { data, error, count } = await supabase
-      .from("grupos")
-      .select(
-        `
+    let query = supabase.from("grupos").select(
+      `
         id, nombre, descripcion, nivel, creado_en,
-        usuarios!grupos_creador_id_fkey (nombre_completo)
+        usuarios!grupos_creador_id_fkey (nombre_completo),
+        grupo_miembros (count),
+        tickets (count)
       `,
-        { count: "exact" },
-      )
+      { count: "exact" },
+    );
+
+    if (search) {
+      query = query.or(
+        `nombre.ilike.%${search}%,descripcion.ilike.%${search}%`,
+      );
+    }
+
+    const { data, error, count } = await query
       .order("creado_en", { ascending: false })
       .range(from, to);
 
@@ -197,6 +207,8 @@ export const getAllGroups = async (req: AuthRequest, res: Response) => {
       nivel: grupo.nivel,
       creadoEn: grupo.creado_en,
       autor: grupo.usuarios?.nombre_completo || "Desconocido",
+      integrantes: grupo.grupo_miembros[0]?.count || 0,
+      tickets: grupo.tickets[0]?.count || 0,
     }));
 
     return res.status(200).json({

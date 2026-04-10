@@ -95,7 +95,7 @@ export const createGroup = async (req: AuthRequest, res: Response) => {
     if (!permisosActuales.includes("group-detail:view")) {
       await supabase
         .from("usuarios")
-        .update({ permisos: [...permisosActuales, "group-detail:view"] })
+        .update({ permisos_globales: [...permisosActuales, "group-detail:view"] })
         .eq("id", userId);
     }
 
@@ -530,7 +530,7 @@ export const addGroupMember = async (req: AuthRequest, res: Response) => {
     if (!permisosActuales.includes("group-detail:view")) {
       await supabase
         .from("usuarios")
-        .update({ permisos: [...permisosActuales, "group-detail:view"] })
+        .update({ permisos_globales: [...permisosActuales, "group-detail:view"] })
         .eq("id", usuario.id);
     }
 

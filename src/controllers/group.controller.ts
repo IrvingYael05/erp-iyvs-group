@@ -85,6 +85,20 @@ export const createGroup = async (req: AuthRequest, res: Response) => {
       } as ApiResponse);
     }
 
+    const { data: usuario } = await supabase
+      .from("usuarios")
+      .select("permisos_globales")
+      .eq("id", userId)
+      .single();
+
+    const permisosActuales = usuario?.permisos_globales || [];
+    if (!permisosActuales.includes("group-detail:view")) {
+      await supabase
+        .from("usuarios")
+        .update({ permisos: [...permisosActuales, "group-detail:view"] })
+        .eq("id", userId);
+    }
+
     return res.status(201).json({
       statusCode: 201,
       intOpCode: 0,
@@ -472,7 +486,7 @@ export const addGroupMember = async (req: AuthRequest, res: Response) => {
 
     const { data: usuario, error: userError } = await supabase
       .from("usuarios")
-      .select("id, email, nombre_completo")
+      .select("id, email, nombre_completo, permisos_globales")
       .eq("email", email.toLowerCase().trim())
       .single();
 
@@ -510,6 +524,14 @@ export const addGroupMember = async (req: AuthRequest, res: Response) => {
         } as ApiResponse);
       }
       throw insertError;
+    }
+
+    const permisosActuales = usuario.permisos_globales || [];
+    if (!permisosActuales.includes("group-detail:view")) {
+      await supabase
+        .from("usuarios")
+        .update({ permisos: [...permisosActuales, "group-detail:view"] })
+        .eq("id", usuario.id);
     }
 
     return res.status(201).json({

@@ -354,12 +354,18 @@ export const updateGroup = async (req: AuthRequest, res: Response) => {
 // ----- Eliminar Grupo -----
 export const deleteGroup = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id, userId } = req.params;
 
     const { error: groupError } = await supabase
       .from("grupos")
       .delete()
       .eq("id", id);
+
+    await supabase
+      .from("tickets")
+      .update({ asignado_id: null })
+      .eq("grupo_id", id)
+      .eq("asignado_id", userId);
 
     if (groupError) {
       return res.status(400).json({

@@ -356,6 +356,8 @@ export const deleteGroup = async (req: AuthRequest, res: Response) => {
   try {
     const { id, userId } = req.params;
 
+    console.log("Intentando eliminar grupo con ID:", id, "por usuario:", userId);
+    
     const { error: groupError } = await supabase
       .from("grupos")
       .delete()
